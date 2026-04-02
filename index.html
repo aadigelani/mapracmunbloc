@@ -239,7 +239,35 @@
     .main-panel { padding: 1.25rem; }
     .blocs-grid { grid-template-columns: 1fr; }
   }
+  /* Admin Button */
+  .admin-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
 
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+
+    padding: 8px 14px;
+
+    color: #1A1612;
+    border: 1px solid rgba(26,22,18,0.3);
+
+    background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(6px);
+
+    text-decoration: none;
+    transition: all 0.3s ease;
+    z-index: 999;
+  }
+
+  .admin-btn:hover {
+    background: #1A1612;
+    color: #F8F5EE;
+    border-color: #1A1612;
+  }
   /* ── MOBILE NAV ── */
   .mobile-nav {
     display: none; position: fixed; bottom: 0; left: 0; right: 0;
@@ -293,7 +321,9 @@
     <div id="loginError" class="error-msg" style="display:none"></div>
   </div>
 </div>
-
+<a href="admin.html" class="admin-btn">
+  Admin Access
+</a>
 <!-- ═══════════════════ APP SCREEN ═══════════════════ -->
 <div id="appScreen" class="screen">
   <header class="app-header">
