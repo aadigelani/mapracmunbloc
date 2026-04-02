@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Committee Strategy Map — Delegate</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #07080f;
+    --surface: #0e101a;
+    --surface2: #161824;
+    --border: rgba(255,255,255,0.07);
+    --accent: #5b8fff;
+    --accent2: #a78bfa;
+    --text: #e8eaf6;
+    --muted: #6b7280;
+    --danger: #f87171;
+    --success: #34d399;
+    --gold: #fbbf24;
+    --radius: 14px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(91,143,255,0.15), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 100%, rgba(167,139,250,0.1), transparent);
+    pointer-events: none; z-index: 0;
+  }
+  h1,h2,h3,h4 { font-family: 'Syne', sans-serif; }
+
+  /* ── SCREEN SYSTEM ── */
+  .screen { display: none; min-height: 100vh; position: relative; z-index: 1; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ── LOGIN SCREEN ── */
+  #loginScreen {
+    align-items: center; justify-content: center;
+    padding: 2rem;
+    animation: fadeIn .5s ease;
+  }
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 3rem 2.5rem;
+    width: 100%; max-width: 440px;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(91,143,255,0.1);
+  }
+  .login-brand {
+    display: flex; align-items: center; gap: .75rem;
+    margin-bottom: 2.5rem;
+  }
+  .login-brand .orb {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+  }
+  .login-brand h1 { font-size: 1.3rem; font-weight: 700; line-height: 1.2; }
+  .login-brand span { font-size: .75rem; color: var(--muted); font-family: 'DM Sans'; font-weight: 400; display: block; }
+  .field { margin-bottom: 1.2rem; }
+  .field label { font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; display: block; margin-bottom: .5rem; }
+  .field input, .field select {
+    width: 100%; padding: .85rem 1rem;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius); color: var(--text);
+    font-family: 'DM Sans'; font-size: .95rem;
+    transition: border-color .2s, box-shadow .2s;
+    outline: none;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--accent); box-shadow: 0 0 0 3px rgba(91,143,255,0.15);
+  }
+  .field select option { background: var(--surface2); }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    padding: .85rem 1.5rem; border-radius: var(--radius);
+    font-family: 'Syne'; font-weight: 600; font-size: .9rem;
+    cursor: pointer; border: none; transition: all .2s; text-decoration: none;
+    width: 100%;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(91,143,255,0.35);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(91,143,255,0.45); }
+  .btn-secondary {
+    background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--surface); border-color: var(--accent); color: var(--accent); }
+  .btn-danger { background: rgba(248,113,113,0.15); color: var(--danger); border: 1px solid rgba(248,113,113,0.3); }
+  .btn-danger:hover { background: rgba(248,113,113,0.25); }
+  .btn-sm { padding: .5rem 1rem; font-size: .8rem; width: auto; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .error-msg { color: var(--danger); font-size: .82rem; margin-top: .75rem; text-align: center; padding: .5rem; background: rgba(248,113,113,0.08); border-radius: 8px; }
+
+  /* ── APP SCREEN ── */
+  #appScreen { padding: 0; }
+  .app-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.2rem 2rem; border-bottom: 1px solid var(--border);
+    background: rgba(14,16,26,0.8); backdrop-filter: blur(20px);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .app-brand { display: flex; align-items: center; gap: .75rem; }
+  .app-brand .orb {
+    width: 32px; height: 32px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center; font-size: .9rem;
+  }
+  .app-brand h2 { font-size: 1rem; font-weight: 700; }
+  .app-meta { font-size: .75rem; color: var(--muted); }
+  .header-right { display: flex; align-items: center; gap: 1rem; }
+  .badge {
+    padding: .3rem .75rem; border-radius: 999px; font-size: .75rem; font-weight: 600;
+    display: inline-flex; align-items: center; gap: .4rem;
+  }
+  .badge-committee { background: rgba(91,143,255,0.15); color: var(--accent); border: 1px solid rgba(91,143,255,0.25); }
+  .badge-bloc { background: rgba(52,211,153,0.15); color: var(--success); border: 1px solid rgba(52,211,153,0.25); }
+  .badge-independent { background: rgba(107,114,128,0.15); color: var(--muted); border: 1px solid rgba(107,114,128,0.25); }
+  .btn-logout { padding: .4rem .9rem; font-size: .78rem; width: auto; }
+
+  /* ── APP BODY ── */
+  .app-body { display: flex; flex: 1; min-height: 0; }
+  .sidebar {
+    width: 280px; flex-shrink: 0; border-right: 1px solid var(--border);
+    background: rgba(14,16,26,0.5); padding: 1.5rem 1rem;
+    overflow-y: auto; display: flex; flex-direction: column; gap: .5rem;
+  }
+  .sidebar-label { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; padding: .25rem .5rem; margin-top: .5rem; }
+  .nav-item {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .75rem 1rem; border-radius: var(--radius);
+    cursor: pointer; transition: all .2s; font-size: .9rem; font-weight: 500;
+    color: var(--muted); border: 1px solid transparent;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(91,143,255,0.1); color: var(--accent); border-color: rgba(91,143,255,0.2); }
+  .nav-icon { font-size: 1.1rem; width: 22px; text-align: center; }
+
+  /* ── MAIN PANEL ── */
+  .main-panel { flex: 1; overflow-y: auto; padding: 2rem; }
+  .panel { display: none; animation: fadeIn .3s ease; }
+  .panel.active { display: block; }
+
+  .panel-header { margin-bottom: 2rem; }
+  .panel-header h3 { font-size: 1.4rem; font-weight: 700; margin-bottom: .25rem; }
+  .panel-header p { color: var(--muted); font-size: .9rem; }
+
+  /* ── BLOC CARDS ── */
+  .blocs-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .bloc-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.25rem;
+    transition: all .2s; position: relative; overflow: hidden;
+  }
+  .bloc-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--bloc-color, var(--accent));
+  }
+  .bloc-card:hover { border-color: rgba(91,143,255,0.3); transform: translateY(-2px); box-shadow: 0 12px 30px rgba(0,0,0,0.3); }
+  .bloc-card.mine { border-color: rgba(91,143,255,0.4); background: rgba(91,143,255,0.05); }
+  .bloc-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1rem; }
+  .bloc-name { font-family: 'Syne'; font-weight: 700; font-size: 1rem; }
+  .bloc-created { font-size: .75rem; color: var(--muted); margin-top: .2rem; }
+  .bloc-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--bloc-color, var(--accent)); flex-shrink: 0; margin-top: 3px; }
+  .members-list { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: 1rem; }
+  .member-chip {
+    padding: .25rem .6rem; border-radius: 999px; font-size: .75rem; font-weight: 500;
+    background: var(--surface2); border: 1px solid var(--border);
+    display: flex; align-items: center; gap: .3rem;
+  }
+  .member-chip.me { background: rgba(91,143,255,0.15); border-color: rgba(91,143,255,0.3); color: var(--accent); }
+  .member-count { font-size: .78rem; color: var(--muted); margin-bottom: .75rem; }
+  .bloc-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+  /* ── CREATE BLOC FORM ── */
+  .create-form {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 2rem; max-width: 480px;
+  }
+  .input-row { display: flex; gap: .75rem; }
+  .input-row .field { flex: 1; margin-bottom: 0; }
+
+  /* ── STATUS PANEL ── */
+  .status-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1rem;
+  }
+  .status-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: .5rem; }
+  .status-label { font-size: .82rem; color: var(--muted); }
+  .status-value { font-weight: 600; font-size: .95rem; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center; padding: 4rem 2rem;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; opacity: .5; }
+  .empty-state p { font-size: .9rem; }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed; bottom: 2rem; right: 2rem; z-index: 9999;
+    padding: .85rem 1.4rem; border-radius: var(--radius);
+    font-size: .88rem; font-weight: 500;
+    background: var(--surface2); border: 1px solid var(--border);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    transform: translateY(20px); opacity: 0;
+    transition: all .3s ease; pointer-events: none;
+    max-width: 340px;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.success { border-color: rgba(52,211,153,0.4); color: var(--success); }
+  #toast.error { border-color: rgba(248,113,113,0.4); color: var(--danger); }
+  #toast.info { border-color: rgba(91,143,255,0.4); color: var(--accent); }
+
+  /* ── LOADING ── */
+  .loading { display: flex; align-items: center; justify-content: center; padding: 3rem; color: var(--muted); gap: .75rem; }
+  .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .app-header { padding: 1rem; }
+    .sidebar { display: none; }
+    .main-panel { padding: 1.25rem; }
+    .blocs-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── MOBILE NAV ── */
+  .mobile-nav {
+    display: none; position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--surface); border-top: 1px solid var(--border);
+    padding: .75rem; z-index: 200;
+    justify-content: space-around;
+  }
+  .mob-nav-btn {
+    display: flex; flex-direction: column; align-items: center; gap: .2rem;
+    padding: .4rem .8rem; border-radius: 10px; cursor: pointer;
+    font-size: .65rem; color: var(--muted); transition: all .2s;
+    background: none; border: none; font-family: 'DM Sans';
+  }
+  .mob-nav-btn .icon { font-size: 1.2rem; }
+  .mob-nav-btn.active { color: var(--accent); }
+  @media (max-width: 768px) {
+    .mobile-nav { display: flex; }
+    #appScreen { padding-bottom: 80px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ LOGIN SCREEN ═══════════════════ -->
+<div id="loginScreen" class="screen active">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="orb">🗺️</div>
+      <div>
+        <h1>Strategy Map</h1>
+        <span>Committee Bloc System</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Phone Number</label>
+      <input type="tel" id="loginPhone" placeholder="+91 98765 43210"/>
+    </div>
+    <div class="field">
+      <label>Delegation / Country Name</label>
+      <input type="text" id="loginDelegation" placeholder="India, USA, France…"/>
+    </div>
+    <div class="field">
+      <label>Committee</label>
+      <select id="loginCommittee">
+        <option value="">Select your committee</option>
+        <option value="UNSC">UNSC — United Nations Security Council</option>
+        <option value="LokSabha">Lok Sabha — Indian Parliament</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">Enter Chamber →</button>
+    <div id="loginError" class="error-msg" style="display:none"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ APP SCREEN ═══════════════════ -->
+<div id="appScreen" class="screen">
+  <header class="app-header">
+    <div class="app-brand">
+      <div class="orb">🗺️</div>
+      <div>
+        <h2>Strategy Map</h2>
+        <div class="app-meta" id="headerMeta">—</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="badge badge-committee" id="committeeTag">—</span>
+      <span class="badge" id="blocStatusTag">Independent</span>
+      <button class="btn btn-secondary btn-sm btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+  </header>
+
+  <div class="app-body">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-label">Navigation</div>
+      <div class="nav-item active" data-panel="status" onclick="switchPanel(this)">
+        <span class="nav-icon">📊</span> My Status
+      </div>
+      <div class="nav-item" data-panel="blocs" onclick="switchPanel(this)">
+        <span class="nav-icon">🧩</span> View Blocs
+      </div>
+      <div class="nav-item" data-panel="create" onclick="switchPanel(this)">
+        <span class="nav-icon">✦</span> Create Bloc
+      </div>
+      <div class="sidebar-label">Info</div>
+      <div class="nav-item" onclick="window.open('admin.html','_blank')">
+        <span class="nav-icon">🖥️</span> Presenter View
+      </div>
+    </nav>
+
+    <!-- Main Panel -->
+    <main class="main-panel">
+
+      <!-- STATUS PANEL -->
+      <div class="panel active" id="panel-status">
+        <div class="panel-header">
+          <h3>My Status</h3>
+          <p>Your current delegation and bloc assignment</p>
+        </div>
+        <div class="status-card">
+          <div class="status-row">
+            <span class="status-label">Delegation</span>
+            <span class="status-value" id="statusDelegation">—</span>
+          </div>
+          <div class="status-row">
+            <span class="status-label">Committee</span>
+            <span class="status-value" id="statusCommittee">—</span>
+          </div>
+          <div class="status-row">
+            <span class="status-label">Phone</span>
+            <span class="status-value" id="statusPhone">—</span>
+          </div>
+        </div>
+        <div class="status-card" id="statusBlocCard">
+          <div class="status-row">
+            <span class="status-label">Bloc Status</span>
+            <span class="status-value" id="statusBlocName">Independent</span>
+          </div>
+          <div id="statusBlocExtra"></div>
+        </div>
+        <button class="btn btn-danger btn-sm" id="leaveBtn" style="display:none;width:auto" onclick="leaveBloc()">🚪 Leave Current Bloc</button>
+      </div>
+
+      <!-- BLOCS PANEL -->
+      <div class="panel" id="panel-blocs">
+        <div class="panel-header">
+          <h3>Active Blocs</h3>
+          <p>Join an existing bloc or stay independent</p>
+        </div>
+        <div id="blocsContainer">
+          <div class="loading"><div class="spinner"></div> Loading blocs…</div>
+        </div>
+      </div>
+
+      <!-- CREATE PANEL -->
+      <div class="panel" id="panel-create">
+        <div class="panel-header">
+          <h3>Create Bloc</h3>
+          <p>Form a new alliance. Invite others to join once created.</p>
+        </div>
+        <div class="create-form">
+          <div class="field">
+            <label>Bloc Name</label>
+            <input type="text" id="newBlocName" placeholder="e.g. Western Alliance, G4 Bloc…"/>
+          </div>
+          <button class="btn btn-primary" onclick="createBloc()">🚀 Create & Join Bloc</button>
+          <div id="createError" class="error-msg" style="display:none"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Mobile Nav -->
+  <nav class="mobile-nav">
+    <button class="mob-nav-btn active" data-panel="status" onclick="switchPanel(this)">
+      <span class="icon">📊</span>Status
+    </button>
+    <button class="mob-nav-btn" data-panel="blocs" onclick="switchPanel(this)">
+      <span class="icon">🧩</span>Blocs
+    </button>
+    <button class="mob-nav-btn" data-panel="create" onclick="switchPanel(this)">
+      <span class="icon">✦</span>Create
+    </button>
+  </nav>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, remove, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ── FIREBASE CONFIG (replace with your own) ──
+const firebaseConfig = {
+  apiKey: "AIzaSyBmcrIARMXksDd0SD-GJMVY0HidSjS0WZ8",
+  authDomain: "racmun-voting.firebaseapp.com",
+  databaseURL: "https://racmun-voting-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "racmun-voting",
+  storageBucket: "racmun-voting.firebasestorage.app",
+  messagingSenderId: "263791447211",
+  appId: "1:263791447211:web:1e1b5aa814d96521a23bee"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// ── STATE ──
+let session = null;   // { phone, delegation, committee }
+let allBlocs = {};
+let myBlocId = null;
+let unsubBlocs = null;
+
+// ── COLORS ──
+const BLOC_COLORS = [
+  '#5b8fff','#a78bfa','#34d399','#fbbf24','#f87171',
+  '#38bdf8','#fb923c','#e879f9','#4ade80','#f472b6',
+  '#818cf8','#a3e635','#2dd4bf','#facc15','#fb7185'
+];
+function getBlocColor(i){ return BLOC_COLORS[i % BLOC_COLORS.length]; }
+
+// ── PHONE SANITIZE (use as Firebase key) ──
+function sanitizePhone(p){ return p.replace(/[^0-9]/g,''); }
+
+// ── LOGIN ──
+window.doLogin = async function(){
+  const phone = document.getElementById('loginPhone').value.trim();
+  const delegation = document.getElementById('loginDelegation').value.trim();
+  const committee = document.getElementById('loginCommittee').value;
+  const err = document.getElementById('loginError');
+  err.style.display='none';
+  if(!phone||!delegation||!committee){err.style.display='block';err.textContent='All fields required.';return;}
+  const key = sanitizePhone(phone);
+  if(key.length < 7){err.style.display='block';err.textContent='Enter a valid phone number.';return;}
+  session = { phone: key, rawPhone: phone, delegation, committee };
+  // Register delegate in Firebase
+  await set(ref(db,`delegates/${committee}/${key}`),{ delegation, phone: key, joinedAt: Date.now() });
+  startApp();
+};
+
+// ── LOGOUT ──
+window.doLogout = function(){
+  if(unsubBlocs) unsubBlocs();
+  session = null; myBlocId = null; allBlocs = {};
+  showScreen('loginScreen');
+};
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startApp(){
+  showScreen('appScreen');
+  // Update header
+  document.getElementById('headerMeta').textContent = `${session.delegation} · ${session.rawPhone}`;
+  document.getElementById('committeeTag').textContent = session.committee;
+  document.getElementById('statusDelegation').textContent = session.delegation;
+  document.getElementById('statusCommittee').textContent = session.committee;
+  document.getElementById('statusPhone').textContent = session.rawPhone;
+  subscribeBlocs();
+}
+
+// ── SUBSCRIBE TO BLOCS ──
+function subscribeBlocs(){
+  const blocsRef = ref(db, `strategy/${session.committee}/blocs`);
+  unsubBlocs = onValue(blocsRef, snap => {
+    allBlocs = snap.val() || {};
+    renderBlocs();
+    updateMyStatus();
+  });
+}
+
+// ── RENDER BLOCS ──
+function renderBlocs(){
+  const container = document.getElementById('blocsContainer');
+  const keys = Object.keys(allBlocs);
+  if(keys.length===0){
+    container.innerHTML = `<div class="empty-state"><div class="icon">🌐</div><p>No blocs formed yet. Be the first to create one!</p></div>`;
+    return;
+  }
+  let html = '<div class="blocs-grid">';
+  keys.forEach((id,i)=>{
+    const bloc = allBlocs[id];
+    const members = bloc.members ? Object.keys(bloc.members) : [];
+    const ismine = myBlocId===id;
+    const iamIn = members.includes(session.phone);
+    const color = getBlocColor(i);
+    html += `<div class="bloc-card ${ismine||iamIn?'mine':''}" style="--bloc-color:${color}">
+      <div class="bloc-card-header">
+        <div>
+          <div class="bloc-name">${escHtml(bloc.name)}</div>
+          <div class="bloc-created">Created by <strong>${escHtml(bloc.createdBy||'?')}</strong></div>
+        </div>
+        <div class="bloc-dot"></div>
+      </div>
+      <div class="member-count">${members.length} member${members.length!==1?'s':''}</div>
+      <div class="members-list">${members.map(m=>{
+        const d = getDelegationForPhone(m,bloc);
+        return `<span class="member-chip ${m===session.phone?'me':''}">${m===session.phone?'👤 ':''} ${escHtml(d)}</span>`;
+      }).join('')}</div>
+      <div class="bloc-actions">
+        ${iamIn
+          ? `<button class="btn btn-danger btn-sm" onclick="leaveBloc()">Leave</button>`
+          : `<button class="btn btn-primary btn-sm" onclick="joinBloc('${id}')">Join Bloc</button>`}
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function getDelegationForPhone(phone, bloc){
+  if(bloc.memberNames && bloc.memberNames[phone]) return bloc.memberNames[phone];
+  return phone.slice(-4);
+}
+
+// ── UPDATE MY STATUS ──
+function updateMyStatus(){
+  myBlocId = null;
+  for(const [id, bloc] of Object.entries(allBlocs)){
+    if(bloc.members && bloc.members[session.phone]){ myBlocId = id; break; }
+  }
+  const bloc = myBlocId ? allBlocs[myBlocId] : null;
+  const nameEl = document.getElementById('statusBlocName');
+  const extraEl = document.getElementById('statusBlocExtra');
+  const leaveBtn = document.getElementById('leaveBtn');
+  const statusTag = document.getElementById('blocStatusTag');
+
+  if(bloc){
+    const members = Object.keys(bloc.members||{});
+    const color = getBlocColor(Object.keys(allBlocs).indexOf(myBlocId));
+    nameEl.textContent = bloc.name;
+    nameEl.style.color = color;
+    extraEl.innerHTML = `<div class="status-row"><span class="status-label">Members</span><span class="status-value">${members.length}</span></div>`;
+    leaveBtn.style.display = 'inline-flex';
+    statusTag.textContent = bloc.name;
+    statusTag.className = 'badge badge-bloc';
+    statusTag.style.setProperty('--s-color', color);
+  } else {
+    nameEl.textContent = 'Independent'; nameEl.style.color = '';
+    extraEl.innerHTML = '';
+    leaveBtn.style.display = 'none';
+    statusTag.textContent = 'Independent';
+    statusTag.className = 'badge badge-independent';
+  }
+}
+
+// ── CREATE BLOC ──
+window.createBloc = async function(){
+  const name = document.getElementById('newBlocName').value.trim();
+  const err = document.getElementById('createError');
+  err.style.display='none';
+  if(!name){err.style.display='block';err.textContent='Enter a bloc name.';return;}
+  if(myBlocId){err.style.display='block';err.textContent='You must leave your current bloc first.';return;}
+  // Check duplicate name
+  const existing = Object.values(allBlocs).find(b=>b.name.toLowerCase()===name.toLowerCase());
+  if(existing){err.style.display='block';err.textContent='A bloc with this name already exists.';return;}
+  try{
+    const blocsRef = ref(db,`strategy/${session.committee}/blocs`);
+    const newRef = push(blocsRef);
+    await set(newRef,{
+      name, createdBy: session.delegation, createdAt: Date.now(),
+      members:{ [session.phone]: true },
+      memberNames:{ [session.phone]: session.delegation }
+    });
+    document.getElementById('newBlocName').value='';
+    toast('Bloc created! 🎉','success');
+    switchPanelById('blocs');
+  }catch(e){ err.style.display='block'; err.textContent='Error: '+e.message; }
+};
+
+// ── JOIN BLOC ──
+window.joinBloc = async function(blocId){
+  if(myBlocId && myBlocId!==blocId){ showToast('Leave your current bloc first.','error'); return; }
+  if(myBlocId===blocId){ toast('Already in this bloc','info'); return; }
+  try{
+    await update(ref(db,`strategy/${session.committee}/blocs/${blocId}/members`),{ [session.phone]: true });
+    await update(ref(db,`strategy/${session.committee}/blocs/${blocId}/memberNames`),{ [session.phone]: session.delegation });
+    toast('Joined bloc! 🤝','success');
+  }catch(e){ toast('Error: '+e.message,'error'); }
+};
+
+// ── LEAVE BLOC ──
+window.leaveBloc = async function(){
+  if(!myBlocId){ toast('Not in any bloc','info'); return; }
+  try{
+    const bloc = allBlocs[myBlocId];
+    const members = bloc.members ? Object.keys(bloc.members) : [];
+    if(members.length <= 1){
+      // Delete entire bloc
+      await remove(ref(db,`strategy/${session.committee}/blocs/${myBlocId}`));
+      toast('You left and the bloc was dissolved.','info');
+    } else {
+      await remove(ref(db,`strategy/${session.committee}/blocs/${myBlocId}/members/${session.phone}`));
+      await remove(ref(db,`strategy/${session.committee}/blocs/${myBlocId}/memberNames/${session.phone}`));
+      toast('Left the bloc.','info');
+    }
+  }catch(e){ toast('Error: '+e.message,'error'); }
+};
+
+// ── PANEL SWITCHING ──
+window.switchPanel = function(el){
+  const panelId = el.dataset.panel;
+  switchPanelById(panelId);
+  // Sidebar
+  document.querySelectorAll('.sidebar .nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.sidebar .nav-item[data-panel="'+panelId+'"]').forEach(n=>n.classList.add('active'));
+  // Mobile
+  document.querySelectorAll('.mob-nav-btn').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.mob-nav-btn[data-panel="'+panelId+'"]').forEach(n=>n.classList.add('active'));
+};
+function switchPanelById(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+id)?.classList.add('active');
+}
+
+// ── TOAST ──
+window.toast = function(msg, type='info'){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'show '+type;
+  clearTimeout(el._t); el._t = setTimeout(()=>{ el.className=''; },3000);
+};
+
+function escHtml(s){ const d=document.createElement('div');d.textContent=s;return d.innerHTML; }
+</script>
+</body>
+</html>

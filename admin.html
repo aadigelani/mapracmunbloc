@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Committee Strategy Map — Admin & Presenter</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #07080f;
+  --surface: #0e101a;
+  --surface2: #161824;
+  --surface3: #1e2133;
+  --border: rgba(255,255,255,0.07);
+  --accent: #5b8fff;
+  --accent2: #a78bfa;
+  --text: #e8eaf6;
+  --muted: #6b7280;
+  --danger: #f87171;
+  --success: #34d399;
+  --gold: #fbbf24;
+  --radius: 12px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(91,143,255,0.12),transparent),radial-gradient(ellipse 60% 40% at 80% 100%,rgba(167,139,250,0.08),transparent);pointer-events:none;z-index:0;}
+h1,h2,h3,h4{font-family:'Syne',sans-serif;}
+
+/* ── SCREEN ── */
+.screen{display:none;min-height:100vh;position:relative;z-index:1;}
+.screen.active{display:flex;flex-direction:column;}
+
+/* ── LOGIN ── */
+#loginScreen{align-items:center;justify-content:center;padding:2rem;animation:fadeIn .5s ease;}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:3rem 2.5rem;width:100%;max-width:440px;box-shadow:0 40px 80px rgba(0,0,0,0.5);}
+.login-brand{display:flex;align-items:center;gap:.75rem;margin-bottom:2rem;}
+.orb{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#f87171,#fbbf24);display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
+.login-brand h1{font-size:1.3rem;font-weight:700;}
+.login-brand span{font-size:.73rem;color:var(--muted);display:block;}
+.field{margin-bottom:1.2rem;}
+.field label{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.5rem;}
+.field input,.field select{width:100%;padding:.85rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'DM Sans';font-size:.95rem;outline:none;transition:border-color .2s,box-shadow .2s;}
+.field input:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,143,255,0.15);}
+.field select option{background:var(--surface2);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.85rem 1.5rem;border-radius:var(--radius);font-family:'Syne';font-weight:600;font-size:.9rem;cursor:pointer;border:none;transition:all .2s;text-decoration:none;}
+.btn-full{width:100%;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 4px 20px rgba(91,143,255,0.3);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(91,143,255,0.4);}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+.btn-danger{background:rgba(248,113,113,0.12);color:var(--danger);border:1px solid rgba(248,113,113,0.25);}
+.btn-danger:hover{background:rgba(248,113,113,0.2);}
+.btn-sm{padding:.45rem .9rem;font-size:.78rem;}
+.btn-xs{padding:.3rem .7rem;font-size:.73rem;}
+.error-msg{color:var(--danger);font-size:.82rem;margin-top:.75rem;text-align:center;padding:.5rem;background:rgba(248,113,113,0.08);border-radius:8px;}
+
+/* ── HEADER ── */
+.app-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 2rem;border-bottom:1px solid var(--border);background:rgba(14,16,26,0.85);backdrop-filter:blur(20px);position:sticky;top:0;z-index:200;gap:1rem;flex-wrap:wrap;}
+.brand{display:flex;align-items:center;gap:.75rem;}
+.brand .orb{width:32px;height:32px;border-radius:9px;font-size:.9rem;}
+.brand h2{font-size:1rem;font-weight:700;}
+.tab-bar{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:999px;padding:3px;gap:2px;}
+.tab{padding:.4rem 1.1rem;border-radius:999px;font-family:'Syne';font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;color:var(--muted);border:none;background:none;}
+.tab.active{background:var(--surface3);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,0.3);}
+.header-right{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;}
+.badge{padding:.3rem .75rem;border-radius:999px;font-size:.75rem;font-weight:600;display:inline-flex;align-items:center;gap:.4rem;}
+.badge-admin{background:rgba(251,191,36,0.15);color:var(--gold);border:1px solid rgba(251,191,36,0.25);}
+.badge-committee{background:rgba(91,143,255,0.15);color:var(--accent);border:1px solid rgba(91,143,255,0.25);}
+
+/* ── PANELS ── */
+.panel{display:none;flex:1;animation:fadeIn .3s ease;}
+.panel.active{display:flex;flex-direction:column;}
+
+/* ═════════════════════════════════════════════
+   CONTROLLER PANEL
+   ═════════════════════════════════════════════ */
+.ctrl-layout{display:flex;flex:1;gap:0;min-height:0;}
+.ctrl-sidebar{width:300px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;padding:1.5rem 1rem;}
+.ctrl-main{flex:1;overflow-y:auto;padding:1.5rem 2rem;}
+.section-title{font-family:'Syne';font-weight:700;font-size:1rem;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;}
+.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.5rem;}
+.stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;text-align:center;}
+.stat-box .val{font-family:'Syne';font-size:1.8rem;font-weight:800;}
+.stat-box .lbl{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.bloc-list-item{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:.75rem;position:relative;overflow:hidden;transition:border-color .2s;}
+.bloc-list-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--bcolor,var(--accent));}
+.bli-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;}
+.bli-name{font-family:'Syne';font-weight:700;font-size:.95rem;}
+.bli-creator{font-size:.73rem;color:var(--muted);}
+.members-wrap{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem;}
+.chip{padding:.22rem .55rem;border-radius:999px;font-size:.72rem;font-weight:500;background:var(--surface3);border:1px solid var(--border);}
+.indep-list{display:flex;flex-wrap:wrap;gap:.4rem;}
+.indep-chip{padding:.35rem .75rem;border-radius:999px;font-size:.78rem;background:rgba(107,114,128,0.12);border:1px solid rgba(107,114,128,0.2);color:var(--muted);}
+
+/* ═════════════════════════════════════════════
+   PRESENTER - SHARED
+   ═════════════════════════════════════════════ */
+.presenter-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.presenter-controls{padding:.75rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:1rem;background:var(--surface);flex-wrap:wrap;}
+.pres-title{font-family:'Syne';font-weight:700;font-size:1rem;flex:1;}
+.legend{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;}
+.legend-item{display:flex;align-items:center;gap:.4rem;font-size:.75rem;}
+.legend-dot{width:10px;height:10px;border-radius:50%;}
+
+/* ═════════════════════════════════════════════
+   UNSC MAP PRESENTER
+   ═════════════════════════════════════════════ */
+.unsc-layout{flex:1;display:flex;overflow:hidden;}
+.map-area{flex:1;overflow:hidden;position:relative;background:var(--bg);}
+#worldMap{width:100%;height:100%;}
+.map-tooltip{
+  position:absolute;background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:.75rem 1rem;min-width:160px;
+  pointer-events:none;opacity:0;transition:opacity .2s;z-index:50;
+  box-shadow:0 10px 30px rgba(0,0,0,0.5);
+}
+.map-tooltip.visible{opacity:1;}
+.tt-country{font-family:'Syne';font-weight:700;font-size:.95rem;}
+.tt-bloc{font-size:.78rem;margin:.25rem 0;}
+.tt-members{font-size:.73rem;color:var(--muted);}
+.map-info-panel{width:260px;border-left:1px solid var(--border);background:var(--surface);padding:1rem;overflow-y:auto;flex-shrink:0;}
+
+/* ═════════════════════════════════════════════
+   LOK SABHA PRESENTER
+   ═════════════════════════════════════════════ */
+.loksabha-layout{flex:1;display:flex;overflow:hidden;}
+.seats-area{flex:1;overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;align-items:center;}
+.seats-title{font-family:'Syne';font-weight:800;font-size:1.2rem;margin-bottom:1.25rem;text-align:center;}
+.seats-grid{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:900px;}
+.seat{
+  width:44px;height:44px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.55rem;font-weight:600;text-align:center;
+  cursor:pointer;transition:all .2s;border:2px solid transparent;
+  line-height:1.2;padding:3px;overflow:hidden;
+  background:var(--seat-color,var(--surface2));
+  color:rgba(255,255,255,0.85);
+  position:relative;
+}
+.seat:hover{transform:scale(1.15);z-index:10;box-shadow:0 4px 20px rgba(0,0,0,0.4);}
+.seat.independent{background:var(--surface3);color:var(--muted);border-color:var(--border);}
+.seat-tooltip{
+  position:fixed;background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:.6rem .9rem;min-width:150px;
+  pointer-events:none;z-index:300;font-size:.78rem;
+  box-shadow:0 10px 30px rgba(0,0,0,0.5);
+  transition:opacity .15s;
+}
+.ls-info-panel{width:260px;border-left:1px solid var(--border);background:var(--surface);padding:1rem;overflow-y:auto;flex-shrink:0;}
+
+/* ═════════════════════════════════════════════
+   WORLD MAP SVG
+   ═════════════════════════════════════════════ */
+.country-path{fill:var(--surface3);stroke:rgba(255,255,255,0.12);stroke-width:.5;cursor:pointer;transition:fill .4s ease,opacity .3s;}
+.country-path:hover{stroke:rgba(255,255,255,0.5);stroke-width:1.2;filter:brightness(1.3);}
+.country-path.colored:hover{filter:brightness(1.2);}
+
+/* ── MISC ── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+.loading{display:flex;align-items:center;gap:.6rem;padding:2rem;color:var(--muted);}
+#toast{position:fixed;bottom:2rem;right:2rem;z-index:9999;padding:.85rem 1.4rem;border-radius:var(--radius);font-size:.88rem;font-weight:500;background:var(--surface2);border:1px solid var(--border);box-shadow:0 20px 40px rgba(0,0,0,0.4);transform:translateY(20px);opacity:0;transition:all .3s ease;pointer-events:none;max-width:320px;}
+#toast.show{transform:translateY(0);opacity:1;}
+#toast.success{border-color:rgba(52,211,153,.4);color:var(--success);}
+#toast.error{border-color:rgba(248,113,113,.4);color:var(--danger);}
+#toast.info{border-color:rgba(91,143,255,.4);color:var(--accent);}
+
+@media(max-width:768px){
+  .ctrl-layout{flex-direction:column;}
+  .ctrl-sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);}
+  .unsc-layout,.loksabha-layout{flex-direction:column;}
+  .map-info-panel,.ls-info-panel{width:100%;border-left:none;border-top:1px solid var(--border);}
+  .app-header{padding:.75rem 1rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ LOGIN ═══════════════════ -->
+<div id="loginScreen" class="screen active">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="orb">🛡️</div>
+      <div><h1>Admin Panel</h1><span>Controller & Presenter</span></div>
+    </div>
+    <div class="field">
+      <label>Admin Password</label>
+      <input type="password" id="adminPass" placeholder="Enter admin password" onkeydown="if(event.key==='Enter') window.doAdminLogin()"/>
+    </div>
+    <div class="field">
+      <label>Committee</label>
+      <select id="adminCommittee">
+        <option value="">Select committee</option>
+        <option value="UNSC">UNSC — Security Council</option>
+        <option value="LokSabha">Lok Sabha — Indian Parliament</option>
+      </select>
+    </div>
+    <button class="btn btn-primary btn-full" id="loginBtn">Enter Admin →</button>
+    <div id="adminError" class="error-msg" style="display:none"></div>
+    <p style="text-align:center;font-size:.75rem;color:var(--muted);margin-top:1rem;">Default password: <code>admin123</code></p>
+  </div>
+</div>
+
+<!-- ═══════════════════ APP ═══════════════════ -->
+<div id="appScreen" class="screen">
+  <header class="app-header">
+    <div class="brand">
+      <div class="orb" style="background:linear-gradient(135deg,#f87171,#fbbf24);">🛡️</div>
+      <h2>Strategy Map</h2>
+    </div>
+    <div class="tab-bar">
+      <button class="tab active" onclick="switchMode('controller',this)">🎛️ Controller</button>
+      <button class="tab" onclick="switchMode('presenter',this)">📺 Presenter</button>
+    </div>
+    <div class="header-right">
+      <span class="badge badge-admin">ADMIN</span>
+      <span class="badge badge-committee" id="headerCommittee">—</span>
+      <button class="btn btn-secondary btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+  </header>
+
+  <!-- CONTROLLER PANEL -->
+  <div class="panel active" id="panel-controller">
+    <div class="ctrl-layout">
+      <div class="ctrl-sidebar">
+        <div class="stat-row">
+          <div class="stat-box"><div class="val" id="statBlocs">0</div><div class="lbl">Blocs</div></div>
+          <div class="stat-box"><div class="val" id="statMembers">0</div><div class="lbl">In Blocs</div></div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-box"><div class="val" id="statIndep">0</div><div class="lbl">Independent</div></div>
+          <div class="stat-box"><div class="val" id="statDelegates">0</div><div class="lbl">Total</div></div>
+        </div>
+        <div class="section-title">🌐 Independent Delegates</div>
+        <div id="indepContainer"><div class="loading"><span class="spinner"></span></div></div>
+      </div>
+      <div class="ctrl-main">
+        <div class="section-title">🧩 All Blocs</div>
+        <div id="blocsController"><div class="loading"><span class="spinner"></span> Loading…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRESENTER PANEL -->
+  <div class="panel" id="panel-presenter">
+    <div class="presenter-wrap" id="presenterContent">
+      <!-- injected by JS based on committee -->
+    </div>
+  </div>
+</div>
+
+<!-- Tooltip -->
+<div class="map-tooltip" id="mapTooltip"></div>
+<div class="seat-tooltip" id="seatTooltip" style="opacity:0;display:none;"></div>
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, remove, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ── CONFIG ── Replace with your own
+const firebaseConfig = {
+  apiKey: "AIzaSyBmcrIARMXksDd0SD-GJMVY0HidSjS0WZ8",
+  authDomain: "racmun-voting.firebaseapp.com",
+  databaseURL: "https://racmun-voting-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "racmun-voting",
+  storageBucket: "racmun-voting.firebasestorage.app",
+  messagingSenderId: "263791447211",
+  appId: "1:263791447211:web:1e1b5aa814d96521a23bee"
+};
+
+const ADMIN_PASS = "admin123";
+const BLOC_COLORS = [
+  '#5b8fff','#a78bfa','#34d399','#fbbf24','#f87171',
+  '#38bdf8','#fb923c','#e879f9','#4ade80','#f472b6',
+  '#818cf8','#a3e635','#2dd4bf','#facc15','#fb7185'
+];
+function getBlocColor(i){ return BLOC_COLORS[i % BLOC_COLORS.length]; }
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let session = null;
+let allBlocs = {};
+let allDelegates = {};
+let unsubBlocs = null, unsubDelegates = null;
+let currentMode = 'controller';
+
+// ── LOGIN ──
+window.doAdminLogin = function(){
+  const pass = document.getElementById('adminPass').value;
+  const committee = document.getElementById('adminCommittee').value;
+  const err = document.getElementById('adminError');
+  err.style.display='none';
+  if(!committee){err.style.display='block';err.textContent='Select a committee.';return;}
+  if(pass !== ADMIN_PASS){err.style.display='block';err.textContent='Incorrect password.';return;}
+  session = { committee };
+  document.getElementById('headerCommittee').textContent = committee;
+  document.getElementById('loginScreen').classList.remove('active');
+  document.getElementById('appScreen').classList.add('active');
+  subscribeData();
+  buildPresenter();
+};
+
+window.doLogout = function(){
+  if(unsubBlocs) unsubBlocs();
+  if(unsubDelegates) unsubDelegates();
+  document.getElementById('appScreen').classList.remove('active');
+  document.getElementById('loginScreen').classList.add('active');
+};
+
+// ── SUBSCRIBE ──
+function subscribeData(){
+  const blocsRef = ref(db,`strategy/${session.committee}/blocs`);
+  unsubBlocs = onValue(blocsRef, snap => {
+    allBlocs = snap.val() || {};
+    renderController();
+    updatePresenter();
+  });
+  const delegatesRef = ref(db,`delegates/${session.committee}`);
+  unsubDelegates = onValue(delegatesRef, snap => {
+    allDelegates = snap.val() || {};
+    renderController();
+  });
+}
+
+// ── CONTROLLER ──
+function renderController(){
+  const blocs = allBlocs;
+  const delegates = allDelegates;
+  const blocKeys = Object.keys(blocs);
+  const phonesInBloc = new Set();
+  blocKeys.forEach(id=>{
+    const m = blocs[id].members || {};
+    Object.keys(m).forEach(p=>phonesInBloc.add(p));
+  });
+  const indepDelegates = Object.entries(delegates).filter(([p])=>!phonesInBloc.has(p));
+  document.getElementById('statBlocs').textContent = blocKeys.length;
+  document.getElementById('statMembers').textContent = phonesInBloc.size;
+  document.getElementById('statIndep').textContent = indepDelegates.length;
+  document.getElementById('statDelegates').textContent = Object.keys(delegates).length;
+
+  // Independent
+  const indepC = document.getElementById('indepContainer');
+  if(indepDelegates.length===0){
+    indepC.innerHTML='<p style="font-size:.8rem;color:var(--muted);padding:.5rem">All delegates in blocs.</p>';
+  } else {
+    indepC.innerHTML='<div class="indep-list">'+indepDelegates.map(([p,d])=>
+      `<span class="indep-chip" title="${p}">🇺🇳 ${escHtml(d.delegation)}</span>`
+    ).join('')+'</div>';
+  }
+
+  // Blocs
+  const bc = document.getElementById('blocsController');
+  if(blocKeys.length===0){
+    bc.innerHTML='<p style="font-size:.82rem;color:var(--muted)">No blocs formed yet.</p>';
+    return;
+  }
+  bc.innerHTML = blocKeys.map((id,i)=>{
+    const b = blocs[id];
+    const members = Object.entries(b.members||{});
+    const color = getBlocColor(i);
+    return `<div class="bloc-list-item" style="--bcolor:${color}">
+      <div class="bli-header">
+        <div>
+          <div class="bli-name">${escHtml(b.name)}</div>
+          <div class="bli-creator">by ${escHtml(b.createdBy||'?')} · ${members.length} member${members.length!==1?'s':''}</div>
+        </div>
+        <button class="btn btn-danger btn-xs" onclick="deleteBloc('${id}')">Delete</button>
+      </div>
+      <div class="members-wrap">${members.map(([p])=>{
+        const name = (b.memberNames&&b.memberNames[p]) ? b.memberNames[p] : p.slice(-4);
+        return `<span class="chip">${escHtml(name)}</span>`;
+      }).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+window.deleteBloc = async function(id){
+  if(!confirm('Delete this bloc?')) return;
+  try{ await remove(ref(db,`strategy/${session.committee}/blocs/${id}`)); toast('Bloc deleted','info'); }
+  catch(e){ toast('Error: '+e.message,'error'); }
+};
+
+// ── MODE SWITCH ──
+window.switchMode = function(mode, btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+mode).classList.add('active');
+  currentMode = mode;
+  if(mode==='presenter') updatePresenter();
+};
+
+// ═══════════════════════════════════
+// PRESENTER BUILD
+// ═══════════════════════════════════
+let countryMap = {};
+let isoToPath = {};
+
+const aliases = {
+  "usa": "united states of america",
+  "uk": "united kingdom",
+  "russia": "russian federation",
+  "south korea": "korea, republic of",
+  "north korea": "korea, democratic people's republic of",
+  "iran": "iran, islamic republic of",
+  "vietnam": "viet nam"
+};
+
+function getISOFromDelegation(name){
+  if(!name) return null;
+  let n = name.trim().toLowerCase();
+  if(aliases[n]) n = aliases[n];
+  return countryMap[n] || null;
+}
+async function loadWorldMap(){
+  const res = await fetch('./assets/countries.geo.json');
+  const geo = await res.json();
+
+  const svg = document.getElementById('worldMap');
+  svg.innerHTML = '';
+
+  countryMap = {};
+  isoToPath = {};
+
+  geo.features.forEach(f => {
+    const iso = f.id;
+    const name = f.properties.name.toLowerCase();
+
+    // build lookup
+    countryMap[name] = iso;
+
+    // aliases
+    if(name.includes("united states")) countryMap["usa"] = iso;
+    if(name.includes("united kingdom")) countryMap["uk"] = iso;
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d", convertCoordsToPath(f.geometry.coordinates));
+    path.setAttribute("data-iso", iso);
+    path.setAttribute("class", "country-path");
+
+    svg.appendChild(path);
+
+    isoToPath[iso] = path;
+
+  });
+
+  // 🔥 IMPORTANT: update map AFTER loading
+  updateUNSCMap();
+}
+function buildPresenter(){
+  const pw = document.getElementById('presenterContent');
+  if(session.committee === 'UNSC'){
+    pw.innerHTML = buildUNSCLayout();
+    loadWorldMap();
+  } else {
+    pw.innerHTML = buildLokSabhaLayout();
+    initLokSabha();
+  }
+}
+
+function updatePresenter(){
+  if(!session) return;
+  if(session.committee === 'UNSC') updateUNSCMap();
+  else updateLokSabha();
+}
+
+
+// ═══════════════════════════════════
+// UNSC — WORLD MAP
+// ═══════════════════════════════════
+function buildUNSCLayout(){
+  return `
+  <div class="presenter-controls">
+    <span class="pres-title">🌍 UNSC — World Bloc Map</span>
+    <div class="legend" id="mapLegend"></div>
+  </div>
+  <div class="unsc-layout">
+    <div class="map-area">
+      <svg id="worldMap" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+    <div class="map-info-panel" id="mapInfoPanel">
+      <div style="font-family:'Syne';font-weight:700;margin-bottom:.75rem">Bloc Details</div>
+      <p style="font-size:.8rem;color:var(--muted)">Click a country to see details.</p>
+    </div>
+  </div>`;
+}
+
+// Country ISO → bloc lookup
+let countryBlocMap = {}; // iso: { blocId, blocName, color, members }
+
+function updateUNSCMap(){
+  countryBlocMap = {};
+  const blocKeys = Object.keys(allBlocs);
+  blocKeys.forEach((id,i)=>{
+    const b = allBlocs[id];
+    const color = getBlocColor(i);
+    const members = Object.entries(b.members||{});
+    members.forEach(([phone])=>{
+      const name = (b.memberNames&&b.memberNames[phone]) ? b.memberNames[phone] : phone.slice(-4);
+      // Map delegation name to ISO code
+      const iso = getISOFromDelegation(name);
+      if(iso){
+        countryBlocMap[iso] = { blocId:id, blocName:b.name, color, delegation:name, allMembers:b.memberNames||{} };
+      }
+    });
+  });
+  // Apply colors to SVG paths
+  document.querySelectorAll('.country-path').forEach(el=>{
+    const iso = el.dataset.iso;
+    if(countryBlocMap[iso]){
+      el.style.fill = countryBlocMap[iso].color;
+      el.classList.add('colored');
+    } else {
+      el.style.fill = '';
+      el.classList.remove('colored');
+    }
+  });
+  // Update legend
+  updateMapLegend();
+}
+
+function convertCoordsToPath(coords){
+  let path = "";
+
+  function drawPolygon(polygon){
+    polygon.forEach(ring => {
+      ring.forEach((point, i) => {
+        if(!Array.isArray(point) || point.length < 2) return;
+
+        const [lng, lat] = point;
+
+        const x = (lng + 180) * (1000 / 360);
+        const y = (90 - lat) * (500 / 180);
+
+        path += (i === 0 ? "M" : "L") + x + "," + y;
+      });
+      path += "Z";
+    });
+  }
+
+  // HANDLE BOTH Polygon & MultiPolygon
+  if (typeof coords[0][0][0] === "number") {
+    // Polygon
+    drawPolygon(coords);
+  } else {
+    // MultiPolygon
+    coords.forEach(drawPolygon);
+  }
+
+  return path;
+}
+function updateMapLegend(){
+  const legend = document.getElementById('mapLegend');
+  if(!legend) return;
+  const blocKeys = Object.keys(allBlocs);
+  legend.innerHTML = blocKeys.map((id,i)=>`
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${getBlocColor(i)}"></div>
+      <span>${escHtml(allBlocs[id].name)}</span>
+    </div>`).join('') + `<div class="legend-item"><div class="legend-dot" style="background:var(--surface3)"></div><span>Independent</span></div>`;
+}
+
+
+
+function showMapTooltip(e, iso, name){
+  const tt = document.getElementById('mapTooltip');
+  const entry = countryBlocMap[iso];
+  tt.innerHTML = `<div class="tt-country">${name}</div>
+    <div class="tt-bloc" style="color:${entry?entry.color:'var(--muted)'}">${entry ? '🧩 '+escHtml(entry.blocName) : '— Independent'}</div>
+    ${entry ? `<div class="tt-members">${Object.values(entry.allMembers).map(v=>escHtml(String(v))).join(', ')}</div>` : ''}`;
+  const rect = e.target.closest('.map-area')?.getBoundingClientRect() || {left:0,top:0};
+  const x = e.clientX - rect.left + 12;
+  const y = e.clientY - rect.top - 30;
+  tt.style.left = x+'px'; tt.style.top = y+'px';
+  tt.classList.add('visible');
+}
+function hideMapTooltip(){ document.getElementById('mapTooltip').classList.remove('visible'); }
+function clickCountry(iso, name){
+  const entry = countryBlocMap[iso];
+  const panel = document.getElementById('mapInfoPanel');
+  if(!panel) return;
+  if(entry){
+    const members = Object.values(entry.allMembers);
+    panel.innerHTML = `
+      <div style="font-family:'Syne';font-weight:700;margin-bottom:.75rem;font-size:1rem">${escHtml(name)}</div>
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem">
+        <div style="width:10px;height:10px;border-radius:50%;background:${entry.color};flex-shrink:0"></div>
+        <span style="font-family:'Syne';font-weight:700">${escHtml(entry.blocName)}</span>
+      </div>
+      <div style="font-size:.75rem;color:var(--muted);margin-bottom:.5rem">MEMBERS</div>
+      ${members.map(m=>`<div style="padding:.35rem .6rem;background:var(--surface2);border-radius:8px;font-size:.8rem;margin-bottom:.3rem">${escHtml(String(m))}</div>`).join('')}`;
+  } else {
+    panel.innerHTML = `<div style="font-family:'Syne';font-weight:700;margin-bottom:.5rem;font-size:1rem">${escHtml(name)}</div>
+      <p style="font-size:.8rem;color:var(--muted)">Independent — not part of any bloc.</p>`;
+  }
+}
+
+// ═══════════════════════════════════
+// LOK SABHA — SEAT GRID
+// ═══════════════════════════════════
+function buildLokSabhaLayout(){
+  return `
+  <div class="presenter-controls">
+    <span class="pres-title">🏛️ Lok Sabha — Seat View</span>
+    <div class="legend" id="lsLegend"></div>
+  </div>
+  <div class="loksabha-layout">
+    <div class="seats-area">
+      <div class="seats-title">House of the People</div>
+      <div class="seats-grid" id="seatsGrid"></div>
+    </div>
+    <div class="ls-info-panel" id="lsInfoPanel">
+      <div style="font-family:'Syne';font-weight:700;margin-bottom:.75rem">Seat Details</div>
+      <p style="font-size:.8rem;color:var(--muted)">Click a seat to see delegate info.</p>
+    </div>
+  </div>`;
+}
+
+function initLokSabha(){
+  updateLokSabha();
+}
+
+function updateLokSabha(){
+  const grid = document.getElementById('seatsGrid');
+  if(!grid) return;
+  const blocKeys = Object.keys(allBlocs);
+  // Build phone→bloc map
+  const phoneBlocMap = {};
+  blocKeys.forEach((id,i)=>{
+    const b = allBlocs[id];
+    Object.keys(b.members||{}).forEach(phone=>{
+      phoneBlocMap[phone] = { id, name:b.name, color:getBlocColor(i), memberNames:b.memberNames||{} };
+    });
+  });
+  // Get all delegates
+  const delegateEntries = Object.entries(allDelegates);
+  if(delegateEntries.length===0){
+    grid.innerHTML='<p style="color:var(--muted);font-size:.85rem">No delegates registered yet.</p>';
+    return;
+  }
+  // Sort: blocs first, then independents
+  const inBloc = delegateEntries.filter(([p])=>phoneBlocMap[p]);
+  const indep = delegateEntries.filter(([p])=>!phoneBlocMap[p]);
+  const sorted = [...inBloc, ...indep];
+  grid.innerHTML = sorted.map(([phone, d])=>{
+    const entry = phoneBlocMap[phone];
+    const displayName = d.delegation || phone.slice(-4);
+    const shortName = displayName.length > 8 ? displayName.slice(0,7)+'…' : displayName;
+    if(entry){
+      return `<div class="seat" style="background:${entry.color};--seat-color:${entry.color}"
+        data-phone="${phone}" data-del="${escHtml(displayName)}" data-bloc="${escHtml(entry.name)}" data-color="${entry.color}"
+        onmouseenter="showSeatTip(event,this)" onmouseleave="hideSeatTip()" onclick="clickSeat(this)"
+        title="${displayName}">${escHtml(shortName)}</div>`;
+    } else {
+      return `<div class="seat independent"
+        data-phone="${phone}" data-del="${escHtml(displayName)}" data-bloc="" data-color=""
+        onmouseenter="showSeatTip(event,this)" onmouseleave="hideSeatTip()" onclick="clickSeat(this)"
+        title="${displayName}">${escHtml(shortName)}</div>`;
+    }
+  }).join('');
+
+  // Legend
+  const lsLegend = document.getElementById('lsLegend');
+  if(lsLegend){
+    lsLegend.innerHTML = blocKeys.map((id,i)=>`
+      <div class="legend-item"><div class="legend-dot" style="background:${getBlocColor(i)}"></div><span>${escHtml(allBlocs[id].name)}</span></div>
+    `).join('') + `<div class="legend-item"><div class="legend-dot" style="background:var(--surface3);border:1px solid var(--border)"></div><span>Independent</span></div>`;
+  }
+}
+
+window.showSeatTip = function(e, el){
+  const tt = document.getElementById('seatTooltip');
+  const bloc = el.dataset.bloc;
+  const color = el.dataset.color;
+  tt.style.display='block';
+  tt.style.opacity='1';
+  tt.innerHTML = `<strong style="font-family:'Syne'">${el.dataset.del}</strong><br>
+    <span style="color:${bloc?color:'var(--muted)'}">● ${bloc || 'Independent'}</span>`;
+  tt.style.left = (e.clientX+12)+'px';
+  tt.style.top = (e.clientY-50)+'px';
+};
+window.hideSeatTip = function(){
+  const tt = document.getElementById('seatTooltip');
+  tt.style.opacity='0';
+  setTimeout(()=>tt.style.display='none',150);
+};
+window.clickSeat = function(el){
+  const panel = document.getElementById('lsInfoPanel');
+  if(!panel) return;
+  const bloc = el.dataset.bloc;
+  const color = el.dataset.color;
+  panel.innerHTML = `<div style="font-family:'Syne';font-weight:700;font-size:1.05rem;margin-bottom:.75rem">${el.dataset.del}</div>
+    <div style="font-size:.75rem;color:var(--muted);margin-bottom:.3rem">BLOC</div>
+    <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .7rem;background:var(--surface2);border-radius:8px">
+      <div style="width:8px;height:8px;border-radius:50%;background:${bloc?color:'var(--muted)'}"></div>
+      <span style="font-weight:600">${bloc || 'Independent'}</span>
+    </div>`;
+};
+
+// ── SIMPLIFIED WORLD MAP PATHS ──
+
+// ── UTILS ──
+function escHtml(s){ const d=document.createElement('div');d.textContent=String(s);return d.innerHTML; }
+window.toast = function(msg, type='info'){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='show '+type;
+  clearTimeout(el._t); el._t=setTimeout(()=>el.className='',3000);
+};
+document.getElementById("loginBtn").addEventListener("click", doAdminLogin);
+</script>
+</body>
+</html>
