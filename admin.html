@@ -396,17 +396,22 @@ window.switchMode = function(mode, btn){
 // ═══════════════════════════════════
 // PRESENTER BUILD
 // ═══════════════════════════════════
-let countryMap = {};
-let isoToPath = {};
+let countryMap = {};   // lowercased-name → iso key
+let isoToPath = {};    // iso key → SVG path element
 
+// FIX: aliases now map to the EXACT lowercased names present in this GeoJSON
 const aliases = {
   "usa": "united states of america",
   "uk": "united kingdom",
-  "russia": "russian federation",
-  "south korea": "korea, republic of",
-  "north korea": "korea, democratic people's republic of",
-  "iran": "iran, islamic republic of",
-  "vietnam": "viet nam"
+  // This GeoJSON uses "russia" not "russian federation"
+  "russian federation": "russia",
+  // This GeoJSON uses plain "south korea" / "north korea" already
+  "korea, republic of": "south korea",
+  "korea, democratic people's republic of": "north korea",
+  // This GeoJSON uses "iran" directly, no alias needed but keep for safety
+  "iran, islamic republic of": "iran",
+  // This GeoJSON uses "vietnam" directly
+  "viet nam": "vietnam"
 };
 
 function getISOFromDelegation(name){
@@ -415,8 +420,10 @@ function getISOFromDelegation(name){
   if(aliases[n]) n = aliases[n];
   return countryMap[n] || null;
 }
+
 async function loadWorldMap(){
-  const res = await fetch('./assets/countries.geo.json');
+  // FIX: correct path — file is countries_geo.json at root, not ./assets/countries.geo.json
+  const res = await fetch('./countries_geo.json');
   const geo = await res.json();
 
   const svg = document.getElementById('worldMap');
@@ -426,28 +433,35 @@ async function loadWorldMap(){
   isoToPath = {};
 
   geo.features.forEach(f => {
-    const iso = f.id;
-    const name = f.properties.name.toLowerCase();
+    const props = f.properties;
+    const name = props.name.toLowerCase();
 
-    // build lookup
+    // FIX: f.id is null in this GeoJSON — use ISO2 from properties.
+    // For the ~22 territories with ISO2 = "-99", fall back to the name as key
+    // so they still render (just won't match delegations, which is correct).
+    let iso = props['ISO3166-1-Alpha-2'];
+    if(!iso || iso === '-99') {
+      // Use a namespaced fallback so the path still renders
+      iso = 'XX-' + name.replace(/\s+/g,'-');
+    }
+
+    // Build name → iso lookup
     countryMap[name] = iso;
-
-    // aliases
-    if(name.includes("united states")) countryMap["usa"] = iso;
-    if(name.includes("united kingdom")) countryMap["uk"] = iso;
 
     const path = document.createElementNS("http://www.w3.org/2000/svg","path");
     path.setAttribute("d", convertCoordsToPath(f.geometry.coordinates));
     path.setAttribute("data-iso", iso);
+    path.setAttribute("data-name", props.name);
     path.setAttribute("class", "country-path");
+    path.addEventListener('mousemove', e => showMapTooltip(e, iso, props.name));
+    path.addEventListener('mouseleave', hideMapTooltip);
+    path.addEventListener('click', () => clickCountry(iso, props.name));
 
     svg.appendChild(path);
-
     isoToPath[iso] = path;
-
   });
 
-  // 🔥 IMPORTANT: update map AFTER loading
+  // Update map AFTER paths are created
   updateUNSCMap();
 }
 function buildPresenter(){
